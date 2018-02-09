@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>
+	</title>
+</head>
+<body>
+
+	<script type="text/javascript">
+var gridHeight = 700;
+var gridWidth = 700;
+var theGrid = createArray(gridWidth);
+var mirrorGrid = createArray(gridWidth);
+var flag=0;
+var size=5;
+var count=0;
+
+
+fillRandom(); //create the starting state for the grid by filling it with random cells
+if(flag===0){
+	tick(); //call main loop
+}
+
+//functions 
+function tick() { //main loop
+    drawGrid();
+    updateGrid();
+    if(flag===0){
+    	requestAnimationFrame(tick);
+    }
+}
+
+function next(){
+	flag=1;
+	drawGrid();
+    updateGrid();
+    //ick();
+}
+
+function auto(){
+	flag=0;
+	drawGrid();
+    updateGrid();
+    requestAnimationFrame(tick);
+}
+
+function createArray(rows) { //creates a 2 dimensional array of required height
+    var arr = [];
+    for (var i = 0; i < rows; i++) {
+        arr[i] = [];
+    }
+    return arr;
+}
+
+function fillRandom() { //fill the grid randomly
+    for (var j = 0; j < gridHeight; j+=size) { //iterate through rows
+        for (var k = 0; k < gridWidth; k+=size) { //iterate through columns
+            var rawRandom = Math.random(); //get a raw random number
+            var improvedNum = (rawRandom * 2); //convert it to an int
+            var randomBinary = Math.floor(improvedNum);
+            if (randomBinary === 1) {
+                theGrid[j][k] = 1;
+            } else {
+                theGrid[j][k] = 0;
+            }
+        }
+    }
+}
+function drawGrid() { //draw the contents of the grid onto a canvas
+    var c = document.getElementById("myCanvas");
+    var ctx = c.getContext("2d");
+    ctx.clearRect(0, 0, 700, 700); //this should clear the canvas ahead of each redraw
+    for (var j = 0; j < gridHeight; j+=size) { //iterate through rows
+        for (var k = 0; k < gridWidth; k+=size) { //iterate through columns
+            if (theGrid[j][k] === 1) {
+                ctx.fillStyle = "#3232ff";
+                ctx.fillRect(j, k, size, size);
+            }
+        }
+    }
+}
+
+function updateGrid() { //perform one iteration of grid update
+    for (var j = 0; j < gridHeight; j+=size) { //iterate through rows
+        for (var k = 0; k < gridWidth; k+=size) { //iterate through columns
+            var totalCells = 0;
+            //add up the total values for the surrounding cells
+            if(j == 0) {
+                    if(k == 0) {
+                            totalCells += theGrid[j][k + size]; //middle right
+
+                            totalCells += theGrid[j + size][k]; //bottom center
+                            totalCells += theGrid[j + size][k + size]; //bottom right
+                        }
+                    else if(k == (gridWidth-size)) {
+                            totalCells += theGrid[j][k - size]; //middle left
+                            
+                            totalCells += theGrid[j + size][k - size]; //bottom left
+                            totalCells += theGrid[j + size][k]; //bottom center
+                        }
+                    else {
+                        totalCells += theGrid[j][k - size]; //middle left
+                        totalCells += theGrid[j][k + size]; //middle right
+
+                        totalCells += theGrid[j + size][k - size]; //bottom left
+                        totalCells += theGrid[j + size][k]; //bottom center
+                        totalCells += theGrid[j + size][k + size]; //bottom right
+                    }
+                }
+            else if(j == (gridHeight-size)) {
+                    if(k == 0) {
+                            totalCells += theGrid[j - size][k]; //top center
+                            totalCells += theGrid[j - size][k + size]; //top right
+
+                            totalCells += theGrid[j][k + size]; //middle right
+                        }
+                    else if(k == (gridWidth-size)) {
+                            totalCells += theGrid[j - size][k - size]; //top left
+                            totalCells += theGrid[j - size][k]; //top center
+                            
+                            totalCells += theGrid[j][k - size]; //middle left
+                        }
+                    else {
+                        totalCells += theGrid[j - size][k - size]; //top left
+                        totalCells += theGrid[j - size][k]; //top center
+                        totalCells += theGrid[j - size][k + size]; //top right
+
+                        totalCells += theGrid[j][k - size]; //middle left
+                        totalCells += theGrid[j][k + size]; //middle right
+                    }
+                }
+            else {
+                if(k == 0) {
+                            totalCells += theGrid[j - size][k]; //top center
+                            totalCells += theGrid[j - size][k + size]; //top right
+
+                            totalCells += theGrid[j][k + size]; //middle right
+
+                            totalCells += theGrid[j + size][k]; //bottom center
+                            totalCells += theGrid[j + size][k + size]; //bottom right
+                        }
+                    else if(k == (gridWidth-size)) {
+                            totalCells += theGrid[j - size][k - size]; //top left
+                            totalCells += theGrid[j - size][k]; //top center
+                            
+                            totalCells += theGrid[j][k - size]; //middle left
+                            
+                            totalCells += theGrid[j + size][k - size]; //bottom left
+                            totalCells += theGrid[j + size][k]; //bottom center
+                        }
+                    else {
+                        totalCells += theGrid[j - size][k - size]; //top left
+                        totalCells += theGrid[j - size][k]; //top center
+                        totalCells += theGrid[j - size][k + size]; //top right
+
+                        totalCells += theGrid[j][k - size]; //middle left
+                        totalCells += theGrid[j][k + size]; //middle right
+
+                        totalCells += theGrid[j + size][k - size]; //bottom left
+                        totalCells += theGrid[j + size][k]; //bottom center
+                        totalCells += theGrid[j + size][k + size]; //bottom right
+                    }
+            }
+            //apply the rules to each cell
+            if (theGrid[j][k] === 0) {
+                switch (totalCells) {
+                    case 3:
+                        mirrorGrid[j][k] = 1; //if cell is dead and has 3 neighbours, switch it on
+                        break;
+                    default:
+                        mirrorGrid[j][k] = 0; //otherwise leave it dead
+                }
+            } else if (theGrid[j][k] === 1) { //apply rules to living cell
+                switch (totalCells) {
+                    case 0:
+                    case 1:
+                        mirrorGrid[j][k] = 0; //die of lonelines
+                        break;
+                    case 2:
+                    case 3:
+                        mirrorGrid[j][k] = 1; //carry on living
+                        break;
+                    case 4:
+                    case 5:
+                    case 6:
+                    case 7:
+                    case 8:
+                        mirrorGrid[j][k] = 0; //die of overcrowding
+                        break;
+                    default:
+                        mirrorGrid[j][k] = 0; //
+                }
+            }
+        }
+    }
+
+    for (j = 0; j < gridHeight; j+=size) { //iterate through rows
+        for (k = 0; k < gridWidth; k+=size) { //iterate through columns
+            theGrid[j][k] = mirrorGrid[j][k];
+        }
+    }
+
+    count++;
+
+}	</script>
+
+
+    <style type="text/css">
+        body{
+            background: black;
+        }
+    </style>
+
+	<center>
+		<canvas id="myCanvas" width="700" height="700" style="border:1px solid #000000;"></canvas><br><br>
+		<button id="Next" onclick="next()">Next</button>
+		<button id="auto" onclick="auto()">Auto</button><br><br>
+        count
+	</center>
+
+
+</body>
+</html>
